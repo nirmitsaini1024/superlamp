@@ -1,5 +1,6 @@
 import os
-from typing import List, Optional, Type
+import os as os_module
+from typing import List, Optional, Type ,Literal
 
 import requests
 from httpx import AsyncClient
@@ -92,9 +93,6 @@ class _CreateBareMetalInstanceToolInput(BaseModel):
         None,
         description="Hostname to set on the instance (e.g. 'my-server.example.com').",
     )
-    tag: Optional[str] = Field(
-        None, description="Deprecated: Use tags instead. The user-supplied tag"
-    )
     reserved_ipv4: Optional[str] = Field(
         None, description="The Reserved IP id for this instance"
     )
@@ -120,18 +118,6 @@ class _CreateBareMetalInstanceToolInput(BaseModel):
     )
     persistent_pxe: Optional[bool] = Field(
         None, description="Enable persistent PXE (default: false)"
-    )
-    attach_vpc2: Optional[List[str]] = Field(
-        None,
-        description="Deprecated: An array of VPC IDs to attach to this Bare Metal Instance",
-    )
-    detach_vpc2: Optional[List[str]] = Field(
-        None,
-        description="Deprecated: An array of VPC IDs to detach from this Bare Metal Instance",
-    )
-    enable_vpc2: Optional[bool] = Field(
-        None,
-        description="Deprecated: If true, VPC 2.0 support will be added to the new server",
     )
     tags: Optional[List[str]] = Field(
         None,
@@ -182,7 +168,6 @@ class CreateBareMetalInstanceTool(BaseTool):
         label: Optional[str] = None,
         activation_email: Optional[bool] = None,
         hostname: Optional[str] = None,
-        tag: Optional[str] = None,
         reserved_ipv4: Optional[str] = None,
         os_id: Optional[int] = None,
         snapshot_id: Optional[str] = None,
@@ -190,9 +175,6 @@ class CreateBareMetalInstanceTool(BaseTool):
         image_id: Optional[str] = None,
         ipxe_chain_url: Optional[str] = None,
         persistent_pxe: Optional[bool] = None,
-        attach_vpc2: Optional[List[str]] = None,
-        detach_vpc2: Optional[List[str]] = None,
-        enable_vpc2: Optional[bool] = None,
         tags: Optional[List[str]] = None,
         user_scheme: Optional[str] = None,
         mdisk_mode: Optional[str] = None,
@@ -210,7 +192,6 @@ class CreateBareMetalInstanceTool(BaseTool):
                 label=label,
                 activation_email=activation_email,
                 hostname=hostname,
-                tag=tag,
                 reserved_ipv4=reserved_ipv4,
                 os_id=os_id,
                 snapshot_id=snapshot_id,
@@ -218,9 +199,6 @@ class CreateBareMetalInstanceTool(BaseTool):
                 image_id=image_id,
                 ipxe_chain_url=ipxe_chain_url,
                 persistent_pxe=persistent_pxe,
-                attach_vpc2=attach_vpc2,
-                detach_vpc2=detach_vpc2,
-                enable_vpc2=enable_vpc2,
                 tags=tags,
                 user_scheme=user_scheme,
                 mdisk_mode=mdisk_mode,
@@ -253,7 +231,6 @@ class CreateBareMetalInstanceTool(BaseTool):
         label: Optional[str] = None,
         activation_email: Optional[bool] = None,
         hostname: Optional[str] = None,
-        tag: Optional[str] = None,
         reserved_ipv4: Optional[str] = None,
         os_id: Optional[int] = None,
         snapshot_id: Optional[str] = None,
@@ -261,9 +238,6 @@ class CreateBareMetalInstanceTool(BaseTool):
         image_id: Optional[str] = None,
         ipxe_chain_url: Optional[str] = None,
         persistent_pxe: Optional[bool] = None,
-        attach_vpc2: Optional[List[str]] = None,
-        detach_vpc2: Optional[List[str]] = None,
-        enable_vpc2: Optional[bool] = None,
         tags: Optional[List[str]] = None,
         user_scheme: Optional[str] = None,
         mdisk_mode: Optional[str] = None,
@@ -282,7 +256,6 @@ class CreateBareMetalInstanceTool(BaseTool):
                 label=label,
                 activation_email=activation_email,
                 hostname=hostname,
-                tag=tag,
                 reserved_ipv4=reserved_ipv4,
                 os_id=os_id,
                 snapshot_id=snapshot_id,
@@ -290,9 +263,6 @@ class CreateBareMetalInstanceTool(BaseTool):
                 image_id=image_id,
                 ipxe_chain_url=ipxe_chain_url,
                 persistent_pxe=persistent_pxe,
-                attach_vpc2=attach_vpc2,
-                detach_vpc2=detach_vpc2,
-                enable_vpc2=enable_vpc2,
                 tags=tags,
                 user_scheme=user_scheme,
                 mdisk_mode=mdisk_mode,
@@ -381,6 +351,591 @@ class ListBareMetalPlansTool(BaseTool):
             return plans
         except AsyncClient.exceptions.RequestException as e:
             raise ValueError(f"Error listing bare metal plans: {e}")
+
+
+class _ListPlansToolInput(BaseModel):
+    """Input for list VPS plans tool"""
+    type: Optional[Literal["all", "vc2", "vdc", "vhf", "vhp", "voc", "voc-g", "voc-c", "voc-m", "voc-s", "vcg"]] = Field(
+        None,
+        description=(
+            "Filter the results by type: all, vc2, vdc, vhf, vhp, voc, voc-g, voc-c, voc-m, voc-s, vcg."
+        ),
+    )
+    per_page: Optional[int] = Field(
+        None,
+        description="Number of items requested per page. Default is 100 and Max is 500.",
+    )
+    cursor: Optional[str] = Field(
+        None,
+        description="Cursor for paging. See Meta and Pagination.",
+    )
+    os: Optional[str] = Field(
+        None,
+        description="Filter the results by operating system: windows.",
+    )
+
+
+class ListPlansTool(BaseTool):
+    """Tool to list VPS plans (cloud compute offerings)."""
+
+    name: str = "list_plans"
+    description: str = (
+        "List VPS plans across Vultr Cloud Compute, Dedicated Cloud, High Frequency, Optimized, and GPU. "
+        "Use the plan id when creating instances. Optional filters: type and os=windows."
+    )
+    args_schema: Type[_ListPlansToolInput] = _ListPlansToolInput
+
+    def _run(
+        self,
+        type: Optional[str] = None,
+        per_page: Optional[int] = None,
+        cursor: Optional[str] = None,
+        os: Optional[str] = None,
+    ) -> str:
+        """Run the tool"""
+        try:
+            params = {}
+            if type:
+                params["type"] = type
+            if per_page:
+                params["per_page"] = per_page
+            if cursor:
+                params["cursor"] = cursor
+            if os:
+                params["os"] = os
+
+            response = requests.get(
+                "https://api.vultr.com/v2/plans",
+                params=params,
+                headers={"Authorization": f"Bearer {os_module.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            plans = data["plans"]
+            return plans
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Error listing plans: {e}")
+
+    async def _arun(
+        self,
+        type: Optional[str] = None,
+        per_page: Optional[int] = None,
+        cursor: Optional[str] = None,
+        os: Optional[str] = None,
+    ) -> str:
+        """Run the tool asynchronously"""
+
+        try:
+            params = {}
+            if type:
+                params["type"] = type
+            if per_page:
+                params["per_page"] = per_page
+            if cursor:
+                params["cursor"] = cursor
+            if os:
+                params["os"] = os
+
+            response = await _httpx_client.get(
+                "/plans",
+                params=params,
+                headers={"Authorization": f"Bearer {os_module.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            plans = data["plans"]
+            return plans
+        except AsyncClient.exceptions.RequestException as e:
+            raise ValueError(f"Error listing plans: {e}")
+
+
+class _ListAvailablePlansInRegionToolInput(BaseModel):
+    """Input for list available plans in region tool"""
+
+    region: str = Field(
+        ...,
+        description="The Region id to check availability for (e.g. ewr, lax, ams).",
+    )
+    type: Optional[str] = Field(
+        None,
+        description=(
+            "Filter the results by type: all, vc2, vdc, vhf, vhp, voc, voc-g, voc-c, voc-m, voc-s, vbm, vcg."
+        ),
+    )
+
+
+class ListAvailablePlansInRegionTool(BaseTool):
+    """Tool to list available plans in a specific region."""
+
+    name: str = "list_available_plans_in_region"
+    description: str = (
+        "List plan ids available in a specific region. Use this to verify plan availability before deployment. "
+        "Optional filter: type."
+    )
+    args_schema: Type[_ListAvailablePlansInRegionToolInput] = (
+        _ListAvailablePlansInRegionToolInput
+    )
+
+    def _run(self, region: str, type: Optional[str] = None) -> str:
+        """Run the tool"""
+        try:
+            params = {}
+            if type:
+                params["type"] = type
+
+            response = requests.get(
+                f"https://api.vultr.com/v2/regions/{region}/availability",
+                params=params,
+                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            available_plans = data["available_plans"]
+            return available_plans
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Error listing available plans in region: {e}")
+
+    async def _arun(self, region: str, type: Optional[str] = None) -> str:
+        """Run the tool asynchronously"""
+
+        try:
+            params = {}
+            if type:
+                params["type"] = type
+
+            response = await _httpx_client.get(
+                f"/regions/{region}/availability",
+                params=params,
+                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            available_plans = data["available_plans"]
+            return available_plans
+        except AsyncClient.exceptions.RequestException as e:
+            raise ValueError(f"Error listing available plans in region: {e}")
+
+
+class _ListInstancesToolInput(BaseModel):
+    """Input for list instances tool"""
+
+    per_page: Optional[int] = Field(
+        None,
+        description="Number of items requested per page. Default is 100 and Max is 500.",
+    )
+    cursor: Optional[str] = Field(
+        None,
+        description="Cursor for paging. See Meta and Pagination.",
+    )
+    label: Optional[str] = Field(None, description="Filter by label.")
+    main_ip: Optional[str] = Field(None, description="Filter by main ip address.")
+    region: Optional[str] = Field(None, description="Filter by Region id.")
+    firewall_group_id: Optional[str] = Field(
+        None, description="Filter by Firewall group id."
+    )
+    hostname: Optional[str] = Field(None, description="Filter by hostname.")
+    show_pending_charges: Optional[bool] = Field(
+        None, description="Set to true to show pending charges."
+    )
+
+
+class ListInstancesTool(BaseTool):
+    """Tool to list all VPS instances"""
+
+    name: str = "list_instances"
+    description: str = "List all VPS instances in the Vultr account"
+    args_schema: Type[_ListInstancesToolInput] = _ListInstancesToolInput
+
+    def _run(
+        self,
+        per_page: Optional[int] = None,
+        cursor: Optional[str] = None,
+        label: Optional[str] = None,
+        main_ip: Optional[str] = None,
+        region: Optional[str] = None,
+        firewall_group_id: Optional[str] = None,
+        hostname: Optional[str] = None,
+        show_pending_charges: Optional[bool] = None,
+    ) -> str:
+        """Run the tool"""
+        try:
+            params = {}
+            if per_page:
+                params["per_page"] = per_page
+            if cursor:
+                params["cursor"] = cursor
+            if label:
+                params["label"] = label
+            if main_ip:
+                params["main_ip"] = main_ip
+            if region:
+                params["region"] = region
+            if firewall_group_id:
+                params["firewall_group_id"] = firewall_group_id
+            if hostname:
+                params["hostname"] = hostname
+            if show_pending_charges is not None:
+                params["show_pending_charges"] = show_pending_charges
+
+            response = requests.get(
+                "https://api.vultr.com/v2/instances",
+                params=params,
+                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            instances = data["instances"]
+            return instances
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Error listing instances: {e}")
+
+    async def _arun(
+        self,
+        per_page: Optional[int] = None,
+        cursor: Optional[str] = None,
+        label: Optional[str] = None,
+        main_ip: Optional[str] = None,
+        region: Optional[str] = None,
+        firewall_group_id: Optional[str] = None,
+        hostname: Optional[str] = None,
+        show_pending_charges: Optional[bool] = None,
+    ) -> str:
+        """Run the tool asynchronously"""
+
+        try:
+            params = {}
+            if per_page:
+                params["per_page"] = per_page
+            if cursor:
+                params["cursor"] = cursor
+            if label:
+                params["label"] = label
+            if main_ip:
+                params["main_ip"] = main_ip
+            if region:
+                params["region"] = region
+            if firewall_group_id:
+                params["firewall_group_id"] = firewall_group_id
+            if hostname:
+                params["hostname"] = hostname
+            if show_pending_charges is not None:
+                params["show_pending_charges"] = show_pending_charges
+
+            response = await _httpx_client.get(
+                "/instances",
+                params=params,
+                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            instances = data["instances"]
+            return instances
+        except AsyncClient.exceptions.RequestException as e:
+            raise ValueError(f"Error listing instances: {e}")
+
+
+class _GetInstanceToolInput(BaseModel):
+    """Input for get instance tool"""
+
+    instance_id: str = Field(..., description="The Instance ID.")
+
+
+class GetInstanceTool(BaseTool):
+    """Tool to get details about a VPS instance"""
+
+    name: str = "get_instance"
+    description: str = "Get information about a VPS instance by id"
+    args_schema: Type[_GetInstanceToolInput] = _GetInstanceToolInput
+
+    def _run(self, instance_id: str) -> str:
+        """Run the tool"""
+        try:
+            response = requests.get(
+                f"https://api.vultr.com/v2/instances/{instance_id}",
+                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            instance = data["instance"]
+            return instance
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Error getting instance: {e}")
+
+    async def _arun(self, instance_id: str) -> str:
+        """Run the tool asynchronously"""
+
+        try:
+            response = await _httpx_client.get(
+                f"/instances/{instance_id}",
+                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            instance = data["instance"]
+            return instance
+        except AsyncClient.exceptions.RequestException as e:
+            raise ValueError(f"Error getting instance: {e}")
+
+
+class _CreateVpsInstanceToolInput(BaseModel):
+    """Input for create VPS instance tool"""
+
+    region: str = Field(
+        ...,
+        description="The Region id where the Instance is located (e.g. ewr, lax, ams).",
+    )
+    plan: str = Field(
+        ...,
+        description="The Plan id to use when deploying this instance.",
+    )
+    os_id: Optional[int] = Field(
+        None, description="The Operating System id to use when deploying this instance."
+    )
+    ipxe_chain_url: Optional[str] = Field(
+        None, description="The URL location of the iPXE chainloader."
+    )
+    iso_id: Optional[str] = Field(
+        None, description="The ISO id to use when deploying this instance."
+    )
+    script_id: Optional[str] = Field(
+        None, description="The Startup Script id to use when deploying this instance."
+    )
+    snapshot_id: Optional[str] = Field(
+        None, description="The Snapshot id to use when deploying the instance."
+    )
+    enable_ipv6: Optional[bool] = Field(None, description="Enable IPv6.")
+    disable_public_ipv4: Optional[bool] = Field(
+        None,
+        description="Don't set up a public IPv4 address when IPv6 is enabled.",
+    )
+    attach_vpc: Optional[List[str]] = Field(
+        None,
+        description="An array of VPC IDs to attach to this Instance.",
+    )
+    label: Optional[str] = Field(None, description="A user-supplied label for this instance.")
+    sshkey_id: Optional[List[str]] = Field(
+        None, description="The SSH Key id(s) to install on this instance."
+    )
+    backups: Optional[str] = Field(
+        None,
+        description="Enable automatic backups for the instance (enabled or disabled).",
+    )
+    block_devices: Optional[List[dict]] = Field(
+        None, description="Block device configuration for VX1 instances."
+    )
+    app_id: Optional[int] = Field(
+        None, description="The Application id to use when deploying this instance."
+    )
+    image_id: Optional[str] = Field(
+        None, description="The Application image_id to use when deploying this instance."
+    )
+    user_data: Optional[str] = Field(
+        None, description="The user-supplied, base64 encoded user data."
+    )
+    ddos_protection: Optional[bool] = Field(
+        None, description="Enable DDoS protection (additional charge)."
+    )
+    activation_email: Optional[bool] = Field(
+        None, description="Notify by email after deployment."
+    )
+    hostname: Optional[str] = Field(
+        None, description="The hostname to use when deploying this instance."
+    )
+    firewall_group_id: Optional[str] = Field(
+        None, description="The Firewall Group id to attach to this Instance."
+    )
+    reserved_ipv4: Optional[str] = Field(
+        None, description="ID of the floating IP to use as the main IP of this server."
+    )
+    enable_vpc: Optional[bool] = Field(
+        None,
+        description="If true, VPC support will be added to the new server.",
+    )
+    vpc_only: Optional[bool] = Field(
+        None,
+        description="If true, this VPS will not receive a public IP or public NIC.",
+    )
+    tags: Optional[List[str]] = Field(None, description="Tags to apply to the instance.")
+    user_scheme: Optional[str] = Field(
+        None, description="Linux-only: user scheme (root or limited)."
+    )
+    app_variables: Optional[dict] = Field(
+        None, description="App variable inputs for marketplace apps (name/value pairs)."
+    )
+
+    @model_validator(mode="after")
+    def require_deployment_method(self) -> "_CreateVpsInstanceToolInput":
+        if not any([self.os_id, self.iso_id, self.snapshot_id, self.app_id, self.image_id]):
+            raise ValueError(
+                "At least one of os_id, iso_id, snapshot_id, app_id, or image_id must be provided"
+            )
+        return self
+
+
+class CreateVpsInstanceTool(BaseTool):
+    """Tool to create a VPS instance on Vultr."""
+
+    name: str = "create_vps_instance"
+    description: str = (
+        "Create a VPS instance with the selected plan and deployment method. Required: region and plan, "
+        "plus exactly one of os_id, iso_id, snapshot_id, app_id, or image_id."
+    )
+    args_schema: Type[_CreateVpsInstanceToolInput] = _CreateVpsInstanceToolInput
+
+    def _run(
+        self,
+        region: str,
+        plan: str,
+        os_id: Optional[int] = None,
+        ipxe_chain_url: Optional[str] = None,
+        iso_id: Optional[str] = None,
+        script_id: Optional[str] = None,
+        snapshot_id: Optional[str] = None,
+        enable_ipv6: Optional[bool] = None,
+        disable_public_ipv4: Optional[bool] = None,
+        attach_vpc: Optional[List[str]] = None,
+        label: Optional[str] = None,
+        sshkey_id: Optional[List[str]] = None,
+        backups: Optional[str] = None,
+        block_devices: Optional[List[dict]] = None,
+        app_id: Optional[int] = None,
+        image_id: Optional[str] = None,
+        user_data: Optional[str] = None,
+        ddos_protection: Optional[bool] = None,
+        activation_email: Optional[bool] = None,
+        hostname: Optional[str] = None,
+        firewall_group_id: Optional[str] = None,
+        reserved_ipv4: Optional[str] = None,
+        enable_vpc: Optional[bool] = None,
+        vpc_only: Optional[bool] = None,
+        tags: Optional[List[str]] = None,
+        user_scheme: Optional[str] = None,
+        app_variables: Optional[dict] = None,
+    ) -> str:
+        """Run the tool"""
+        try:
+            input_model = _CreateVpsInstanceToolInput(
+                region=region,
+                plan=plan,
+                os_id=os_id,
+                ipxe_chain_url=ipxe_chain_url,
+                iso_id=iso_id,
+                script_id=script_id,
+                snapshot_id=snapshot_id,
+                enable_ipv6=enable_ipv6,
+                disable_public_ipv4=disable_public_ipv4,
+                attach_vpc=attach_vpc,
+                label=label,
+                sshkey_id=sshkey_id,
+                backups=backups,
+                block_devices=block_devices,
+                app_id=app_id,
+                image_id=image_id,
+                user_data=user_data,
+                ddos_protection=ddos_protection,
+                activation_email=activation_email,
+                hostname=hostname,
+                firewall_group_id=firewall_group_id,
+                reserved_ipv4=reserved_ipv4,
+                enable_vpc=enable_vpc,
+                vpc_only=vpc_only,
+                tags=tags,
+                user_scheme=user_scheme,
+                app_variables=app_variables,
+            )
+            payload = input_model.model_dump(exclude_none=True)
+
+            response = requests.post(
+                "https://api.vultr.com/v2/instances",
+                headers={
+                    "Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data["instance"]
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Error creating VPS instance: {e}")
+
+    async def _arun(
+        self,
+        region: str,
+        plan: str,
+        os_id: Optional[int] = None,
+        ipxe_chain_url: Optional[str] = None,
+        iso_id: Optional[str] = None,
+        script_id: Optional[str] = None,
+        snapshot_id: Optional[str] = None,
+        enable_ipv6: Optional[bool] = None,
+        disable_public_ipv4: Optional[bool] = None,
+        attach_vpc: Optional[List[str]] = None,
+        label: Optional[str] = None,
+        sshkey_id: Optional[List[str]] = None,
+        backups: Optional[str] = None,
+        block_devices: Optional[List[dict]] = None,
+        app_id: Optional[int] = None,
+        image_id: Optional[str] = None,
+        user_data: Optional[str] = None,
+        ddos_protection: Optional[bool] = None,
+        activation_email: Optional[bool] = None,
+        hostname: Optional[str] = None,
+        firewall_group_id: Optional[str] = None,
+        reserved_ipv4: Optional[str] = None,
+        enable_vpc: Optional[bool] = None,
+        vpc_only: Optional[bool] = None,
+        tags: Optional[List[str]] = None,
+        user_scheme: Optional[str] = None,
+        app_variables: Optional[dict] = None,
+    ) -> str:
+        """Run the tool asynchronously"""
+
+        try:
+            input_model = _CreateVpsInstanceToolInput(
+                region=region,
+                plan=plan,
+                os_id=os_id,
+                ipxe_chain_url=ipxe_chain_url,
+                iso_id=iso_id,
+                script_id=script_id,
+                snapshot_id=snapshot_id,
+                enable_ipv6=enable_ipv6,
+                disable_public_ipv4=disable_public_ipv4,
+                attach_vpc=attach_vpc,
+                label=label,
+                sshkey_id=sshkey_id,
+                backups=backups,
+                block_devices=block_devices,
+                app_id=app_id,
+                image_id=image_id,
+                user_data=user_data,
+                ddos_protection=ddos_protection,
+                activation_email=activation_email,
+                hostname=hostname,
+                firewall_group_id=firewall_group_id,
+                reserved_ipv4=reserved_ipv4,
+                enable_vpc=enable_vpc,
+                vpc_only=vpc_only,
+                tags=tags,
+                user_scheme=user_scheme,
+                app_variables=app_variables,
+            )
+            payload = input_model.model_dump(exclude_none=True)
+
+            response = await _httpx_client.post(
+                "/instances",
+                headers={
+                    "Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data["instance"]
+        except AsyncClient.exceptions.RequestException as e:
+            raise ValueError(f"Error creating VPS instance: {e}")
 
 
 class _ListSshKeysToolInput(BaseModel):
@@ -706,178 +1261,3 @@ class ListApplicationsTool(BaseTool):
         except AsyncClient.exceptions.RequestException as e:
             raise ValueError(f"Error listing applications: {e}")
 
-
-class _CreateVpcToolInput(BaseModel):
-    """Input for create VPC tool"""
-
-    region: Optional[str] = Field(
-        None,
-        description="Create the VPC in this Region id.",
-    )
-    description: Optional[str] = Field(
-        None,
-        description="A description of the VPC.",
-    )
-    v4_subnet: Optional[str] = Field(
-        None,
-        description="The IPv4 VPC address. Example: 10.99.0.0",
-    )
-    v4_subnet_mask: Optional[int] = Field(
-        None,
-        description="The number of bits for the netmask in CIDR notation. Example: 24",
-    )
-
-
-class CreateVpcTool(BaseTool):
-    """Tool to create a VPC"""
-
-    name: str = "create_vpc"
-    description: str = "Create a new VPC in a Vultr region"
-    args_schema: _CreateVpcToolInput = _CreateVpcToolInput
-
-    def _run(
-        self,
-        region: Optional[str] = None,
-        description: Optional[str] = None,
-        v4_subnet: Optional[str] = None,
-        v4_subnet_mask: Optional[int] = None,
-    ) -> str:
-        """Run the tool"""
-        try:
-            if not region:
-                regions_response = requests.get(
-                    "https://api.vultr.com/v2/regions",
-                    headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
-                )
-                regions_response.raise_for_status()
-                regions_data = regions_response.json()
-                regions = regions_data.get("regions", [])
-                if not regions:
-                    raise ValueError("No regions available to create VPC.")
-                region = regions[0].get("id")
-
-            payload = {"region": region}
-            if description:
-                payload["description"] = description
-            if v4_subnet:
-                payload["v4_subnet"] = v4_subnet
-            if v4_subnet_mask is not None:
-                payload["v4_subnet_mask"] = v4_subnet_mask
-
-            response = requests.post(
-                "https://api.vultr.com/v2/vpcs",
-                json=payload,
-                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
-            )
-            response.raise_for_status()
-            data = response.json()
-            vpc = data["vpc"]
-            return vpc
-        except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error creating VPC: {e}")
-
-    async def _arun(
-        self,
-        region: Optional[str] = None,
-        description: Optional[str] = None,
-        v4_subnet: Optional[str] = None,
-        v4_subnet_mask: Optional[int] = None,
-    ) -> str:
-        """Run the tool asynchronously"""
-
-        try:
-            if not region:
-                regions_response = await _httpx_client.get(
-                    "/regions",
-                    headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
-                )
-                regions_response.raise_for_status()
-                regions_data = regions_response.json()
-                regions = regions_data.get("regions", [])
-                if not regions:
-                    raise ValueError("No regions available to create VPC.")
-                region = regions[0].get("id")
-
-            payload = {"region": region}
-            if description:
-                payload["description"] = description
-            if v4_subnet:
-                payload["v4_subnet"] = v4_subnet
-            if v4_subnet_mask is not None:
-                payload["v4_subnet_mask"] = v4_subnet_mask
-
-            response = await _httpx_client.post(
-                "/vpcs",
-                json=payload,
-                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
-            )
-            response.raise_for_status()
-            data = response.json()
-            vpc = data["vpc"]
-            return vpc
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error creating VPC: {e}")
-
-
-class _ListVpcsToolInput(BaseModel):
-    """Input for list VPCs tool"""
-
-    per_page: Optional[int] = Field(
-        None,
-        description="Number of items requested per page. Default is 100 and Max is 500.",
-    )
-    cursor: Optional[str] = Field(
-        None,
-        description="Cursor for paging. See Meta and Pagination.",
-    )
-
-
-class ListVpcsTool(BaseTool):
-    """Tool to list all VPCs"""
-
-    name: str = "list_vpcs"
-    description: str = "List all VPCs in the Vultr account"
-    args_schema: _ListVpcsToolInput = _ListVpcsToolInput
-
-    def _run(self, per_page: Optional[int] = None, cursor: Optional[str] = None) -> str:
-        """Run the tool"""
-        try:
-            params = {}
-            if per_page:
-                params["per_page"] = per_page
-            if cursor:
-                params["cursor"] = cursor
-
-            response = requests.get(
-                "https://api.vultr.com/v2/vpcs",
-                params=params,
-                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
-            )
-            response.raise_for_status()
-            data = response.json()
-            vpcs = data["vpcs"]
-            return vpcs
-        except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error listing VPCs: {e}")
-
-    async def _arun(self, per_page: Optional[int] = None, cursor: Optional[str] = None) -> str:
-        """Run the tool asynchronously"""
-
-        try:
-            params = {}
-            if per_page:
-                params["per_page"] = per_page
-            if cursor:
-                params["cursor"] = cursor
-
-            response = await _httpx_client.get(
-                "/vpcs",
-                params=params,
-                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
-            )
-            response.raise_for_status()
-            data = response.json()
-            vpcs = data["vpcs"]
-            return vpcs
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error listing VPCs: {e}")

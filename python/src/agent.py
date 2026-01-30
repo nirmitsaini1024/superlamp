@@ -14,6 +14,11 @@ from tools import (
     ListOsTool,
     ListApplicationsTool,
     ListBareMetalPlansTool,
+    ListPlansTool,
+    ListAvailablePlansInRegionTool,
+    ListInstancesTool,
+    GetInstanceTool,
+    CreateVpsInstanceTool,
     CreateBareMetalInstanceTool,
 )
 from dotenv import load_dotenv
@@ -25,7 +30,7 @@ _tools: Optional[List[BaseTool]] = None
 _agent: Optional[CompiledStateGraph] = None
 
 model = ChatOpenAI(
-    model="google/gemini-2.5-flash-lite",
+    model="google/gemini-2.5-flash",
     base_url="https://openrouter.ai/api/v1",
     api_key=os.getenv("OPENROUTER_API_KEY"),
 )
@@ -41,6 +46,11 @@ def get_tools():
             ListOsTool(),
             ListApplicationsTool(),
             ListBareMetalPlansTool(),
+            ListPlansTool(),
+            ListAvailablePlansInRegionTool(),
+            ListInstancesTool(),
+            GetInstanceTool(),
+            CreateVpsInstanceTool(),
             CreateBareMetalInstanceTool(),
         ]
     return _tools
