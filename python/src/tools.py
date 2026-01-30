@@ -705,3 +705,179 @@ class ListApplicationsTool(BaseTool):
             return applications
         except AsyncClient.exceptions.RequestException as e:
             raise ValueError(f"Error listing applications: {e}")
+
+
+class _CreateVpcToolInput(BaseModel):
+    """Input for create VPC tool"""
+
+    region: Optional[str] = Field(
+        None,
+        description="Create the VPC in this Region id.",
+    )
+    description: Optional[str] = Field(
+        None,
+        description="A description of the VPC.",
+    )
+    v4_subnet: Optional[str] = Field(
+        None,
+        description="The IPv4 VPC address. Example: 10.99.0.0",
+    )
+    v4_subnet_mask: Optional[int] = Field(
+        None,
+        description="The number of bits for the netmask in CIDR notation. Example: 24",
+    )
+
+
+class CreateVpcTool(BaseTool):
+    """Tool to create a VPC"""
+
+    name: str = "create_vpc"
+    description: str = "Create a new VPC in a Vultr region"
+    args_schema: _CreateVpcToolInput = _CreateVpcToolInput
+
+    def _run(
+        self,
+        region: Optional[str] = None,
+        description: Optional[str] = None,
+        v4_subnet: Optional[str] = None,
+        v4_subnet_mask: Optional[int] = None,
+    ) -> str:
+        """Run the tool"""
+        try:
+            if not region:
+                regions_response = requests.get(
+                    "https://api.vultr.com/v2/regions",
+                    headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+                )
+                regions_response.raise_for_status()
+                regions_data = regions_response.json()
+                regions = regions_data.get("regions", [])
+                if not regions:
+                    raise ValueError("No regions available to create VPC.")
+                region = regions[0].get("id")
+
+            payload = {"region": region}
+            if description:
+                payload["description"] = description
+            if v4_subnet:
+                payload["v4_subnet"] = v4_subnet
+            if v4_subnet_mask is not None:
+                payload["v4_subnet_mask"] = v4_subnet_mask
+
+            response = requests.post(
+                "https://api.vultr.com/v2/vpcs",
+                json=payload,
+                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            vpc = data["vpc"]
+            return vpc
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Error creating VPC: {e}")
+
+    async def _arun(
+        self,
+        region: Optional[str] = None,
+        description: Optional[str] = None,
+        v4_subnet: Optional[str] = None,
+        v4_subnet_mask: Optional[int] = None,
+    ) -> str:
+        """Run the tool asynchronously"""
+
+        try:
+            if not region:
+                regions_response = await _httpx_client.get(
+                    "/regions",
+                    headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+                )
+                regions_response.raise_for_status()
+                regions_data = regions_response.json()
+                regions = regions_data.get("regions", [])
+                if not regions:
+                    raise ValueError("No regions available to create VPC.")
+                region = regions[0].get("id")
+
+            payload = {"region": region}
+            if description:
+                payload["description"] = description
+            if v4_subnet:
+                payload["v4_subnet"] = v4_subnet
+            if v4_subnet_mask is not None:
+                payload["v4_subnet_mask"] = v4_subnet_mask
+
+            response = await _httpx_client.post(
+                "/vpcs",
+                json=payload,
+                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            vpc = data["vpc"]
+            return vpc
+        except AsyncClient.exceptions.RequestException as e:
+            raise ValueError(f"Error creating VPC: {e}")
+
+
+class _ListVpcsToolInput(BaseModel):
+    """Input for list VPCs tool"""
+
+    per_page: Optional[int] = Field(
+        None,
+        description="Number of items requested per page. Default is 100 and Max is 500.",
+    )
+    cursor: Optional[str] = Field(
+        None,
+        description="Cursor for paging. See Meta and Pagination.",
+    )
+
+
+class ListVpcsTool(BaseTool):
+    """Tool to list all VPCs"""
+
+    name: str = "list_vpcs"
+    description: str = "List all VPCs in the Vultr account"
+    args_schema: _ListVpcsToolInput = _ListVpcsToolInput
+
+    def _run(self, per_page: Optional[int] = None, cursor: Optional[str] = None) -> str:
+        """Run the tool"""
+        try:
+            params = {}
+            if per_page:
+                params["per_page"] = per_page
+            if cursor:
+                params["cursor"] = cursor
+
+            response = requests.get(
+                "https://api.vultr.com/v2/vpcs",
+                params=params,
+                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            vpcs = data["vpcs"]
+            return vpcs
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Error listing VPCs: {e}")
+
+    async def _arun(self, per_page: Optional[int] = None, cursor: Optional[str] = None) -> str:
+        """Run the tool asynchronously"""
+
+        try:
+            params = {}
+            if per_page:
+                params["per_page"] = per_page
+            if cursor:
+                params["cursor"] = cursor
+
+            response = await _httpx_client.get(
+                "/vpcs",
+                params=params,
+                headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            vpcs = data["vpcs"]
+            return vpcs
+        except AsyncClient.exceptions.RequestException as e:
+            raise ValueError(f"Error listing VPCs: {e}")
