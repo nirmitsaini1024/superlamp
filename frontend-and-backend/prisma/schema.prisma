@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+model Droplet {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @map("user_id")
+  dropletId     Int      @unique @map("droplet_id")
+  dropletName   String   @map("droplet_name")
+  dropletStatus String   @map("droplet_status")
+  region        String
+  size          String
+  image         String
+  ipAddress     String?  @map("ip_address")
+  projectName   String?  @map("project_name")
+  userInput     String   @map("user_input")
+  costPerHour   Float?   @map("cost_per_hour")
+  expirationTime DateTime? @map("expiration_time")
+  isDeleted     Boolean  @default(false) @map("is_deleted")
+  deletedAt     DateTime? @map("deleted_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  user          User     @relation(fields: [userId], references: [clerkId])
+
+  @@map("droplets")
+}
+
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId   String    @unique @map("clerk_id")
+  email     String?
+  firstName String?   @map("first_name")
+  lastName  String?   @map("last_name")
+  username  String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  
+  droplets  Droplet[]
+
+  @@map("users")
+}

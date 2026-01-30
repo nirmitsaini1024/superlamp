@@ -1,0 +1,14 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-droplets",
+      "schedule": "* * * * *"
+    }
+  ],
+  "functions": {
+    "src/app/api/cron/cleanup-droplets/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}
+
