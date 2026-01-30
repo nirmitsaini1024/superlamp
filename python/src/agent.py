@@ -21,6 +21,7 @@ from tools import (
     CreateVpsInstanceTool,
     CreateBareMetalInstanceTool,
 )
+from langchain_tavily import TavilySearch, TavilyCrawl
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -52,6 +53,8 @@ def get_tools():
             GetInstanceTool(),
             CreateVpsInstanceTool(),
             CreateBareMetalInstanceTool(),
+            TavilySearch(),
+            TavilyCrawl(),
         ]
     return _tools
 

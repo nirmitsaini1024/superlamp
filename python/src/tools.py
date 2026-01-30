@@ -1,6 +1,8 @@
+import json
 import os
 import os as os_module
-from typing import List, Optional, Type ,Literal
+from typing import List, Optional, Type, Literal
+import base64
 
 import requests
 from httpx import AsyncClient
@@ -10,6 +12,15 @@ from pydantic import BaseModel, Field, model_validator
 _httpx_client: Optional[AsyncClient] = None
 if _httpx_client is None:
     _httpx_client = AsyncClient(base_url="https://api.vultr.com/v2", timeout=30.0)
+
+
+def _api_error_string(response, data: Optional[dict] = None) -> str:
+    """Build a string with full API error for the LLM."""
+    data = data if isinstance(data, dict) else {}
+    status = getattr(response, "status_code", None) or ""
+    text = getattr(response, "text", None) or ""
+    error_msg = data.get("error", json.dumps(data) if data else text or f"HTTP {status}")
+    return f"Error (HTTP {status}): {error_msg}"
 
 
 class _ListRegionsToolInput(BaseModel):
@@ -36,12 +47,16 @@ class ListRegionsTool(BaseTool):
                 "https://api.vultr.com/v2/regions",
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            regions = data["regions"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.ok:
+                return _api_error_string(response, data)
+            regions = data.get("regions", [])
             return regions
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error listing regions: {e}")
+            return f"Error listing regions: {e}"
 
     async def _arun(self, tool_input: str) -> str:
         """Run the tool asynchronously"""
@@ -51,12 +66,16 @@ class ListRegionsTool(BaseTool):
                 "/regions",
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            regions = data["regions"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.is_success:
+                return _api_error_string(response, data)
+            regions = data.get("regions", [])
             return regions
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error listing regions: {e}")
+        except Exception as e:
+            return f"Error listing regions: {e}"
 
 
 class _CreateBareMetalInstanceToolInput(BaseModel):
@@ -80,7 +99,7 @@ class _CreateBareMetalInstanceToolInput(BaseModel):
     )
     user_data: Optional[str] = Field(
         None,
-        description="The user-supplied, base64 encoded user data for this Instance",
+        description="The user-data for the instance.",
     )
     label: Optional[str] = Field(
         None,
@@ -139,9 +158,13 @@ class _CreateBareMetalInstanceToolInput(BaseModel):
     @model_validator(mode="after")
     def require_deployment_method(self) -> "_CreateBareMetalInstanceToolInput":
         if not any([self.os_id, self.snapshot_id, self.app_id, self.image_id]):
-            raise ValueError(
-                "At least one of os_id, snapshot_id, app_id, or image_id must be provided"
-            )
+            return self
+        return self
+
+    @model_validator(mode="before")
+    def convert_user_data_to_base64(self) -> "_CreateBareMetalInstanceToolInput":
+        if self.get("user_data"):
+            self["user_data"] = base64.b64encode(self["user_data"].encode()).decode()
         return self
 
 
@@ -155,7 +178,9 @@ class CreateBareMetalInstanceTool(BaseTool):
         "for one-click apps), or snapshot_id (to restore from snapshot). Optional: sshkey_id (from list_ssh_keys or ensure_ssh_key), "
         "label, hostname, enable_ipv6, tags. Always resolve ids from the list_* tools before calling this."
     )
-    args_schema: Type[_CreateBareMetalInstanceToolInput] = _CreateBareMetalInstanceToolInput
+    args_schema: Type[_CreateBareMetalInstanceToolInput] = (
+        _CreateBareMetalInstanceToolInput
+    )
 
     def _run(
         self,
@@ -214,11 +239,15 @@ class CreateBareMetalInstanceTool(BaseTool):
                 },
                 json=payload,
             )
-            response.raise_for_status()
-            data = response.json()
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.ok:
+                return _api_error_string(response, data)
             return data
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error creating bare metal instance: {e}")
+            return f"Error creating bare metal instance: {e}"
 
     async def _arun(
         self,
@@ -278,11 +307,15 @@ class CreateBareMetalInstanceTool(BaseTool):
                 },
                 json=payload,
             )
-            response.raise_for_status()
-            data = response.json()
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.is_success:
+                return _api_error_string(response, data)
             return data
         except Exception as e:
-            raise ValueError(f"Error creating bare metal instance: {e}")
+            return f"Error creating bare metal instance: {e}"
 
 
 class _ListBareMetalPlansToolInput(BaseModel):
@@ -323,14 +356,20 @@ class ListBareMetalPlansTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.ok:
+                return _api_error_string(response, data)
             plans = data.get("plans_metal", [])
             return plans
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error listing bare metal plans: {e}")
+            return f"Error listing bare metal plans: {e}"
 
-    async def _arun(self, per_page: Optional[str] = None, cursor: Optional[str] = None) -> str:
+    async def _arun(
+        self, per_page: Optional[str] = None, cursor: Optional[str] = None
+    ) -> str:
         """Run the tool asynchronously"""
 
         try:
@@ -345,20 +384,50 @@ class ListBareMetalPlansTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            plans = data["plans"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.is_success:
+                return _api_error_string(response, data)
+            plans = data.get("plans", data.get("plans_metal", []))
             return plans
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error listing bare metal plans: {e}")
+        except Exception as e:
+            return f"Error listing bare metal plans: {e}"
 
 
 class _ListPlansToolInput(BaseModel):
     """Input for list VPS plans tool"""
-    type: Optional[Literal["all", "vc2", "vdc", "vhf", "vhp", "voc", "voc-g", "voc-c", "voc-m", "voc-s", "vcg"]] = Field(
+
+    type: Optional[
+        Literal[
+            "all",
+            "vc2",
+            "vdc",
+            "vhf",
+            "vhp",
+            "voc",
+            "voc-g",
+            "voc-c",
+            "voc-m",
+            "voc-s",
+            "vcg",
+        ]
+    ] = Field(
         None,
         description=(
-            "Filter the results by type: all, vc2, vdc, vhf, vhp, voc, voc-g, voc-c, voc-m, voc-s, vcg."
+            "Filter the results by plan type. Options:\n"
+            "- all: All available types\n"
+            "- vc2: Cloud Compute\n"
+            "- vdc: Dedicated Cloud\n"
+            "- vhf: High Frequency Compute\n"
+            "- vhp: High Performance\n"
+            "- voc: All Optimized Cloud types\n"
+            "- voc-g: General Purpose Optimized Cloud\n"
+            "- voc-c: CPU Optimized Cloud\n"
+            "- voc-m: Memory Optimized Cloud\n"
+            "- voc-s: Storage Optimized Cloud\n"
+            "- vcg: Cloud GPU"
         ),
     )
     per_page: Optional[int] = Field(
@@ -407,14 +476,20 @@ class ListPlansTool(BaseTool):
             response = requests.get(
                 "https://api.vultr.com/v2/plans",
                 params=params,
-                headers={"Authorization": f"Bearer {os_module.getenv('VULTR_API_KEY')}"},
+                headers={
+                    "Authorization": f"Bearer {os_module.getenv('VULTR_API_KEY')}"
+                },
             )
-            response.raise_for_status()
-            data = response.json()
-            plans = data["plans"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.ok:
+                return _api_error_string(response, data)
+            plans = data.get("plans", [])
             return plans
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error listing plans: {e}")
+            return f"Error listing plans: {e}"
 
     async def _arun(
         self,
@@ -439,14 +514,20 @@ class ListPlansTool(BaseTool):
             response = await _httpx_client.get(
                 "/plans",
                 params=params,
-                headers={"Authorization": f"Bearer {os_module.getenv('VULTR_API_KEY')}"},
+                headers={
+                    "Authorization": f"Bearer {os_module.getenv('VULTR_API_KEY')}"
+                },
             )
-            response.raise_for_status()
-            data = response.json()
-            plans = data["plans"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.is_success:
+                return _api_error_string(response, data)
+            plans = data.get("plans", [])
             return plans
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error listing plans: {e}")
+        except Exception as e:
+            return f"Error listing plans: {e}"
 
 
 class _ListAvailablePlansInRegionToolInput(BaseModel):
@@ -488,12 +569,16 @@ class ListAvailablePlansInRegionTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            available_plans = data["available_plans"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.ok:
+                return _api_error_string(response, data)
+            available_plans = data.get("available_plans", [])
             return available_plans
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error listing available plans in region: {e}")
+            return f"Error listing available plans in region: {e}"
 
     async def _arun(self, region: str, type: Optional[str] = None) -> str:
         """Run the tool asynchronously"""
@@ -508,12 +593,16 @@ class ListAvailablePlansInRegionTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            available_plans = data["available_plans"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.is_success:
+                return _api_error_string(response, data)
+            available_plans = data.get("available_plans", [])
             return available_plans
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error listing available plans in region: {e}")
+        except Exception as e:
+            return f"Error listing available plans in region: {e}"
 
 
 class _ListInstancesToolInput(BaseModel):
@@ -582,12 +671,16 @@ class ListInstancesTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            instances = data["instances"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.ok:
+                return _api_error_string(response, data)
+            instances = data.get("instances", [])
             return instances
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error listing instances: {e}")
+            return f"Error listing instances: {e}"
 
     async def _arun(
         self,
@@ -626,12 +719,16 @@ class ListInstancesTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            instances = data["instances"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.is_success:
+                return _api_error_string(response, data)
+            instances = data.get("instances", [])
             return instances
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error listing instances: {e}")
+        except Exception as e:
+            return f"Error listing instances: {e}"
 
 
 class _GetInstanceToolInput(BaseModel):
@@ -654,12 +751,16 @@ class GetInstanceTool(BaseTool):
                 f"https://api.vultr.com/v2/instances/{instance_id}",
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            instance = data["instance"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.ok:
+                return _api_error_string(response, data)
+            instance = data.get("instance", data)
             return instance
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error getting instance: {e}")
+            return f"Error getting instance: {e}"
 
     async def _arun(self, instance_id: str) -> str:
         """Run the tool asynchronously"""
@@ -669,12 +770,16 @@ class GetInstanceTool(BaseTool):
                 f"/instances/{instance_id}",
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            instance = data["instance"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.is_success:
+                return _api_error_string(response, data)
+            instance = data.get("instance", data)
             return instance
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error getting instance: {e}")
+        except Exception as e:
+            return f"Error getting instance: {e}"
 
 
 class _CreateVpsInstanceToolInput(BaseModel):
@@ -712,7 +817,9 @@ class _CreateVpsInstanceToolInput(BaseModel):
         None,
         description="An array of VPC IDs to attach to this Instance.",
     )
-    label: Optional[str] = Field(None, description="A user-supplied label for this instance.")
+    label: Optional[str] = Field(
+        None, description="A user-supplied label for this instance."
+    )
     sshkey_id: Optional[List[str]] = Field(
         None, description="The SSH Key id(s) to install on this instance."
     )
@@ -727,10 +834,11 @@ class _CreateVpsInstanceToolInput(BaseModel):
         None, description="The Application id to use when deploying this instance."
     )
     image_id: Optional[str] = Field(
-        None, description="The Application image_id to use when deploying this instance."
+        None,
+        description="The Application image_id to use when deploying this instance.",
     )
     user_data: Optional[str] = Field(
-        None, description="The user-supplied, base64 encoded user data."
+        None, description=""
     )
     ddos_protection: Optional[bool] = Field(
         None, description="Enable DDoS protection (additional charge)."
@@ -755,7 +863,9 @@ class _CreateVpsInstanceToolInput(BaseModel):
         None,
         description="If true, this VPS will not receive a public IP or public NIC.",
     )
-    tags: Optional[List[str]] = Field(None, description="Tags to apply to the instance.")
+    tags: Optional[List[str]] = Field(
+        None, description="Tags to apply to the instance."
+    )
     user_scheme: Optional[str] = Field(
         None, description="Linux-only: user scheme (root or limited)."
     )
@@ -765,10 +875,16 @@ class _CreateVpsInstanceToolInput(BaseModel):
 
     @model_validator(mode="after")
     def require_deployment_method(self) -> "_CreateVpsInstanceToolInput":
-        if not any([self.os_id, self.iso_id, self.snapshot_id, self.app_id, self.image_id]):
-            raise ValueError(
-                "At least one of os_id, iso_id, snapshot_id, app_id, or image_id must be provided"
-            )
+        if not any(
+            [self.os_id, self.iso_id, self.snapshot_id, self.app_id, self.image_id]
+        ):
+            return "Error: At least one of os_id, iso_id, snapshot_id, app_id, or image_id must be provided"
+        return self
+
+    @model_validator(mode="before")
+    def convert_user_data_to_base64(self) -> "_CreateVpsInstanceToolInput":
+        if self.get("user_data"):
+            self["user_data"] = base64.b64encode(self["user_data"].encode()).decode()
         return self
 
 
@@ -813,51 +929,52 @@ class CreateVpsInstanceTool(BaseTool):
         app_variables: Optional[dict] = None,
     ) -> str:
         """Run the tool"""
-        try:
-            input_model = _CreateVpsInstanceToolInput(
-                region=region,
-                plan=plan,
-                os_id=os_id,
-                ipxe_chain_url=ipxe_chain_url,
-                iso_id=iso_id,
-                script_id=script_id,
-                snapshot_id=snapshot_id,
-                enable_ipv6=enable_ipv6,
-                disable_public_ipv4=disable_public_ipv4,
-                attach_vpc=attach_vpc,
-                label=label,
-                sshkey_id=sshkey_id,
-                backups=backups,
-                block_devices=block_devices,
-                app_id=app_id,
-                image_id=image_id,
-                user_data=user_data,
-                ddos_protection=ddos_protection,
-                activation_email=activation_email,
-                hostname=hostname,
-                firewall_group_id=firewall_group_id,
-                reserved_ipv4=reserved_ipv4,
-                enable_vpc=enable_vpc,
-                vpc_only=vpc_only,
-                tags=tags,
-                user_scheme=user_scheme,
-                app_variables=app_variables,
-            )
-            payload = input_model.model_dump(exclude_none=True)
+        input_model = _CreateVpsInstanceToolInput(
+            region=region,
+            plan=plan,
+            os_id=os_id,
+            ipxe_chain_url=ipxe_chain_url,
+            iso_id=iso_id,
+            script_id=script_id,
+            snapshot_id=snapshot_id,
+            enable_ipv6=enable_ipv6,
+            disable_public_ipv4=disable_public_ipv4,
+            attach_vpc=attach_vpc,
+            label=label,
+            sshkey_id=sshkey_id,
+            backups=backups,
+            block_devices=block_devices,
+            app_id=app_id,
+            image_id=image_id,
+            user_data=user_data,
+            ddos_protection=ddos_protection,
+            activation_email=activation_email,
+            hostname=hostname,
+            firewall_group_id=firewall_group_id,
+            reserved_ipv4=reserved_ipv4,
+            enable_vpc=enable_vpc,
+            vpc_only=vpc_only,
+            tags=tags,
+            user_scheme=user_scheme,
+            app_variables=app_variables,
+        )
+        payload = input_model.model_dump(exclude_none=True)
 
-            response = requests.post(
-                "https://api.vultr.com/v2/instances",
-                headers={
-                    "Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}",
-                    "Content-Type": "application/json",
-                },
-                json=payload,
-            )
-            response.raise_for_status()
+        response = requests.post(
+            "https://api.vultr.com/v2/instances",
+            headers={
+                "Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+        try:
             data = response.json()
-            return data["instance"]
-        except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error creating VPS instance: {e}")
+        except Exception:
+            data = {}
+        if not response.ok:
+            return _api_error_string(response, data)
+        return json.dumps(data)
 
     async def _arun(
         self,
@@ -890,52 +1007,52 @@ class CreateVpsInstanceTool(BaseTool):
         app_variables: Optional[dict] = None,
     ) -> str:
         """Run the tool asynchronously"""
+        input_model = _CreateVpsInstanceToolInput(
+            region=region,
+            plan=plan,
+            os_id=os_id,
+            ipxe_chain_url=ipxe_chain_url,
+            iso_id=iso_id,
+            script_id=script_id,
+            snapshot_id=snapshot_id,
+            enable_ipv6=enable_ipv6,
+            disable_public_ipv4=disable_public_ipv4,
+            attach_vpc=attach_vpc,
+            label=label,
+            sshkey_id=sshkey_id,
+            backups=backups,
+            block_devices=block_devices,
+            app_id=app_id,
+            image_id=image_id,
+            user_data=user_data,
+            ddos_protection=ddos_protection,
+            activation_email=activation_email,
+            hostname=hostname,
+            firewall_group_id=firewall_group_id,
+            reserved_ipv4=reserved_ipv4,
+            enable_vpc=enable_vpc,
+            vpc_only=vpc_only,
+            tags=tags,
+            user_scheme=user_scheme,
+            app_variables=app_variables,
+        )
+        payload = input_model.model_dump(exclude_none=True)
 
+        response = await _httpx_client.post(
+            "/instances",
+            headers={
+                "Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
         try:
-            input_model = _CreateVpsInstanceToolInput(
-                region=region,
-                plan=plan,
-                os_id=os_id,
-                ipxe_chain_url=ipxe_chain_url,
-                iso_id=iso_id,
-                script_id=script_id,
-                snapshot_id=snapshot_id,
-                enable_ipv6=enable_ipv6,
-                disable_public_ipv4=disable_public_ipv4,
-                attach_vpc=attach_vpc,
-                label=label,
-                sshkey_id=sshkey_id,
-                backups=backups,
-                block_devices=block_devices,
-                app_id=app_id,
-                image_id=image_id,
-                user_data=user_data,
-                ddos_protection=ddos_protection,
-                activation_email=activation_email,
-                hostname=hostname,
-                firewall_group_id=firewall_group_id,
-                reserved_ipv4=reserved_ipv4,
-                enable_vpc=enable_vpc,
-                vpc_only=vpc_only,
-                tags=tags,
-                user_scheme=user_scheme,
-                app_variables=app_variables,
-            )
-            payload = input_model.model_dump(exclude_none=True)
-
-            response = await _httpx_client.post(
-                "/instances",
-                headers={
-                    "Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}",
-                    "Content-Type": "application/json",
-                },
-                json=payload,
-            )
-            response.raise_for_status()
             data = response.json()
-            return data["instance"]
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error creating VPS instance: {e}")
+        except Exception:
+            data = {}
+        if not response.is_success:
+            return _api_error_string(response, data)
+        return json.dumps(data.get("instance", data))
 
 
 class _ListSshKeysToolInput(BaseModel):
@@ -975,14 +1092,20 @@ class ListSshKeysTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            ssh_keys = data["ssh_keys"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.ok:
+                return _api_error_string(response, data)
+            ssh_keys = data.get("ssh_keys", [])
             return ssh_keys
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error listing SSH keys: {e}")
+            return f"Error listing SSH keys: {e}"
 
-    async def _arun(self, per_page: Optional[int] = None, cursor: Optional[str] = None) -> str:
+    async def _arun(
+        self, per_page: Optional[int] = None, cursor: Optional[str] = None
+    ) -> str:
         """Run the tool asynchronously"""
 
         try:
@@ -997,12 +1120,16 @@ class ListSshKeysTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            ssh_keys = data["ssh_keys"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.is_success:
+                return _api_error_string(response, data)
+            ssh_keys = data.get("ssh_keys", [])
             return ssh_keys
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error listing SSH keys: {e}")
+        except Exception as e:
+            return f"Error listing SSH keys: {e}"
 
 
 class _EnsureSshKeyToolInput(BaseModel):
@@ -1050,8 +1177,12 @@ class EnsureSshKeyTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            list_response.raise_for_status()
-            list_data = list_response.json()
+            try:
+                list_data = list_response.json()
+            except Exception:
+                list_data = {}
+            if not list_response.ok:
+                return _api_error_string(list_response, list_data)
             ssh_keys = list_data.get("ssh_keys", [])
 
             if ssh_keys:
@@ -1062,11 +1193,15 @@ class EnsureSshKeyTool(BaseTool):
                 json={"name": name, "ssh_key": ssh_key},
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            create_response.raise_for_status()
-            create_data = create_response.json()
+            try:
+                create_data = create_response.json()
+            except Exception:
+                create_data = {}
+            if not create_response.ok:
+                return _api_error_string(create_response, create_data)
             return create_data
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error ensuring SSH key: {e}")
+            return f"Error ensuring SSH key: {e}"
 
     async def _arun(
         self,
@@ -1089,8 +1224,12 @@ class EnsureSshKeyTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            list_response.raise_for_status()
-            list_data = list_response.json()
+            try:
+                list_data = list_response.json()
+            except Exception:
+                list_data = {}
+            if not list_response.is_success:
+                return _api_error_string(list_response, list_data)
             ssh_keys = list_data.get("ssh_keys", [])
 
             if ssh_keys:
@@ -1101,11 +1240,15 @@ class EnsureSshKeyTool(BaseTool):
                 json={"name": name, "ssh_key": ssh_key},
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            create_response.raise_for_status()
-            create_data = create_response.json()
+            try:
+                create_data = create_response.json()
+            except Exception:
+                create_data = {}
+            if not create_response.is_success:
+                return _api_error_string(create_response, create_data)
             return create_data
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error ensuring SSH key: {e}")
+        except Exception as e:
+            return f"Error ensuring SSH key: {e}"
 
 
 class _ListOsToolInput(BaseModel):
@@ -1146,14 +1289,20 @@ class ListOsTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            os_list = data["os"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.ok:
+                return _api_error_string(response, data)
+            os_list = data.get("os", [])
             return os_list
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error listing OS images: {e}")
+            return f"Error listing OS images: {e}"
 
-    async def _arun(self, per_page: Optional[int] = None, cursor: Optional[str] = None) -> str:
+    async def _arun(
+        self, per_page: Optional[int] = None, cursor: Optional[str] = None
+    ) -> str:
         """Run the tool asynchronously"""
 
         try:
@@ -1168,12 +1317,16 @@ class ListOsTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            os_list = data["os"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.is_success:
+                return _api_error_string(response, data)
+            os_list = data.get("os", [])
             return os_list
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error listing OS images: {e}")
+        except Exception as e:
+            return f"Error listing OS images: {e}"
 
 
 class _ListApplicationsToolInput(BaseModel):
@@ -1225,12 +1378,16 @@ class ListApplicationsTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            applications = data["applications"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.ok:
+                return _api_error_string(response, data)
+            applications = data.get("applications", [])
             return applications
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Error listing applications: {e}")
+            return f"Error listing applications: {e}"
 
     async def _arun(
         self,
@@ -1254,10 +1411,13 @@ class ListApplicationsTool(BaseTool):
                 params=params,
                 headers={"Authorization": f"Bearer {os.getenv('VULTR_API_KEY')}"},
             )
-            response.raise_for_status()
-            data = response.json()
-            applications = data["applications"]
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not response.is_success:
+                return _api_error_string(response, data)
+            applications = data.get("applications", [])
             return applications
-        except AsyncClient.exceptions.RequestException as e:
-            raise ValueError(f"Error listing applications: {e}")
-
+        except Exception as e:
+            return f"Error listing applications: {e}"

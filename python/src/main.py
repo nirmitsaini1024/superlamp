@@ -15,7 +15,6 @@ async def root():
 
 @app.post("/agent")
 async def agent(request: AgentRequest):
-
     agent_executor = get_agent()
     output = await agent_executor.ainvoke(
         {"messages": [("user", request.message)]},
