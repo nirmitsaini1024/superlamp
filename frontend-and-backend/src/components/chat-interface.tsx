@@ -8,7 +8,6 @@ import {
   Settings,
   Eye,
   FileText,
-  Plus,
   CheckCircle,
   XCircle,
   Loader2,
@@ -24,6 +23,8 @@ export function ChatInterface({ username }: ChatInterfaceProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [showChatInput, setShowChatInput] = useState(false);
+  const [streamDropletId, setStreamDropletId] = useState<number | null>(null);
+  const [logLines, setLogLines] = useState<string[]>([]);
   const [messages, setMessages] = useState<Array<{
     id: string;
     type: 'user' | 'assistant' | 'system';
@@ -48,6 +49,30 @@ export function ChatInterface({ username }: ChatInterfaceProps) {
       setShowChatInput(false);
     }
   }, [isSubmitted]);
+
+  // SSE log stream for the current droplet (use droplet ID as job id)
+  useEffect(() => {
+    if (streamDropletId == null) return;
+    setLogLines([]);
+    const url = `/api/jobs/${streamDropletId}/logs/stream`;
+    const es = new EventSource(url);
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data) as { line?: string };
+        if (typeof data?.line === "string") {
+          setLogLines((prev) => [...prev, data.line!]);
+        }
+      } catch {
+        // ignore parse errors
+      }
+    };
+    es.onerror = () => {
+      es.close();
+    };
+    return () => {
+      es.close();
+    };
+  }, [streamDropletId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,6 +112,11 @@ export function ChatInterface({ username }: ChatInterfaceProps) {
           }
         }]);
         
+        // Start log stream for this droplet (use droplet ID as job id)
+        if (response.success && response.droplet_id != null) {
+          setStreamDropletId(response.droplet_id);
+        }
+
         // If there are missing parameters, add suggestions
         if (!response.success && response.analysis?.suggestions?.length) {
           setMessages(prev => [...prev, {
@@ -342,14 +372,6 @@ export function ChatInterface({ username }: ChatInterfaceProps) {
             </div>
           )}
 
-          <button
-            className="flex items-center gap-2 text-sm mb-4 p-2 rounded"
-            style={{ color: "var(--muted-foreground)" }}
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add context</span>
-          </button>
-
           <div
             className="text-xs mb-4"
             style={{ color: "var(--muted-foreground)" }}
@@ -503,6 +525,23 @@ export function ChatInterface({ username }: ChatInterfaceProps) {
                     Creating droplet
                   </span>
                   <span className="ml-2 animate-pulse">...</span>
+                </div>
+              )}
+              {/* Live log stream from droplet runner (job id = droplet ID) */}
+              {streamDropletId != null && (
+                <div className="mt-4 pt-4 border-t space-y-0.5" style={{ borderColor: "var(--border)" }}>
+                  <div className="text-muted-foreground text-xs mb-2">
+                    Live logs (job id: {streamDropletId})
+                  </div>
+                  {logLines.length === 0 ? (
+                    <div className="text-muted-foreground text-xs">Initiating your Machine instance ...</div>
+                  ) : (
+                    logLines.map((line, i) => (
+                      <div key={i} className="whitespace-pre-wrap break-all" style={{ color: "var(--foreground)" }}>
+                        {line}
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
             </div>

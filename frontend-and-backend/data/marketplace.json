@@ -1,0 +1,911 @@
+{
+    "applications": [
+        {
+            "id": 1028,
+            "name": "OpenLiteSpeed WordPress",
+            "short_name": "openlitespeedwordpress",
+            "deploy_name": "OpenLiteSpeed WordPress on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "LiteSpeed_Technologies",
+            "image_id": "openlitespeed-wordpress"
+        },
+        {
+            "id": 1030,
+            "name": "CyberPanel",
+            "short_name": "cyberpanel",
+            "deploy_name": "CyberPanel on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "LiteSpeed_Technologies",
+            "image_id": "cyberpanel"
+        },
+        {
+            "id": 1033,
+            "name": "OpenLiteSpeed Django",
+            "short_name": "openlitespeeddjango",
+            "deploy_name": "OpenLiteSpeed Django on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "LiteSpeed_Technologies",
+            "image_id": "openlitespeed-django"
+        },
+        {
+            "id": 1034,
+            "name": "OpenLiteSpeed NodeJS",
+            "short_name": "openlitespeednodejs",
+            "deploy_name": "OpenLiteSpeed NodeJS on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "LiteSpeed_Technologies",
+            "image_id": "openlitespeed-nodejs"
+        },
+        {
+            "id": 1035,
+            "name": "OpenLiteSpeed Rails",
+            "short_name": "openlitespeedrails",
+            "deploy_name": "OpenLiteSpeed Rails on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "LiteSpeed_Technologies",
+            "image_id": "openlitespeed-rails"
+        },
+        {
+            "id": 1066,
+            "name": "Cloudron",
+            "short_name": "cloudron",
+            "deploy_name": "Cloudron on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "cloudron",
+            "image_id": "cloudron"
+        },
+        {
+            "id": 1069,
+            "name": "AzuraCast",
+            "short_name": "azuracast",
+            "deploy_name": "AzuraCast on Debian 13 (\"Trixie\")",
+            "type": "marketplace",
+            "vendor": "azuracast",
+            "image_id": "azuracast"
+        },
+        {
+            "id": 1078,
+            "name": "ServerWand",
+            "short_name": "serverwand",
+            "deploy_name": "ServerWand on Ubuntu 22.04",
+            "type": "marketplace",
+            "vendor": "ServerWand",
+            "image_id": "serverwand"
+        },
+        {
+            "id": 1082,
+            "name": "ClusterControl",
+            "short_name": "clustercontrol",
+            "deploy_name": "ClusterControl on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "Severalnines",
+            "image_id": "clustercontrol"
+        },
+        {
+            "id": 1084,
+            "name": "Microweber Website Builder",
+            "short_name": "microweber",
+            "deploy_name": "Microweber Website Builder on Ubuntu",
+            "type": "marketplace",
+            "vendor": "microweber",
+            "image_id": "microweber"
+        },
+        {
+            "id": 1086,
+            "name": "Bitnami via Vultr - Magento",
+            "short_name": "bitnami_via_vultr_magento",
+            "deploy_name": "Bitnami via Vultr - Magento on Debian 11",
+            "type": "marketplace",
+            "vendor": "bitnami-via-vultr",
+            "image_id": "bitnami-magento-via-vultr"
+        },
+        {
+            "id": 1088,
+            "name": "ONLYOFFICE Docs",
+            "short_name": "onlyoffice_docs",
+            "deploy_name": "ONLYOFFICE Docs on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "Ascensio_System",
+            "image_id": "onlyoffice-docs"
+        },
+        {
+            "id": 1091,
+            "name": "NirvaShare",
+            "short_name": "nirvashare",
+            "deploy_name": "NirvaShare on Ubuntu 24.04 (LTS)",
+            "type": "marketplace",
+            "vendor": "NirvaShare",
+            "image_id": "nirvashare"
+        },
+        {
+            "id": 1092,
+            "name": "OpenVPN Access Server",
+            "short_name": "openvpn_access_server",
+            "deploy_name": "OpenVPN Access Server on Ubuntu 22.04",
+            "type": "marketplace",
+            "vendor": "openvpninc",
+            "image_id": "openvpn"
+        },
+        {
+            "id": 1094,
+            "name": "ONLYOFFICE Workspace",
+            "short_name": "onlyoffice_workspace",
+            "deploy_name": "ONLYOFFICE Workspace on Ubuntu 22.04 LTS",
+            "type": "marketplace",
+            "vendor": "Ascensio_System",
+            "image_id": "onlyoffice-workspace"
+        },
+        {
+            "id": 1097,
+            "name": "UTunnel VPN",
+            "short_name": "utunnel_vpn",
+            "deploy_name": "UTunnel VPN on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "Secubytes",
+            "image_id": "utunnel-vpn"
+        },
+        {
+            "id": 1098,
+            "name": "FASTPANEL",
+            "short_name": "fastpanel",
+            "deploy_name": "FASTPANEL on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "FASTPANEL",
+            "image_id": "fastpanel"
+        },
+        {
+            "id": 1099,
+            "name": "Owncast",
+            "short_name": "owncast",
+            "deploy_name": "Owncast on Debian 12",
+            "type": "marketplace",
+            "vendor": "owncast",
+            "image_id": "owncast"
+        },
+        {
+            "id": 1100,
+            "name": "WarpSpeed VPN",
+            "short_name": "warpspeed",
+            "deploy_name": "WarpSpeed VPN on Ubuntu 20.04",
+            "type": "marketplace",
+            "vendor": "Bunker",
+            "image_id": "warpspeed"
+        },
+        {
+            "id": 1112,
+            "name": "FileCloud",
+            "short_name": "filecloud",
+            "deploy_name": "FileCloud on Ubuntu 22.04",
+            "type": "marketplace",
+            "vendor": "FileCloud",
+            "image_id": "filecloud"
+        },
+        {
+            "id": 1113,
+            "name": "Minecraft (Vanilla)",
+            "short_name": "minecraft_vanilla",
+            "deploy_name": "Minecraft (Vanilla) on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "minecraft-vanilla"
+        },
+        {
+            "id": 1114,
+            "name": "Minecraft (Forge)",
+            "short_name": "minecraft_forge",
+            "deploy_name": "Minecraft (Forge) on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "minecraft-forge"
+        },
+        {
+            "id": 1115,
+            "name": "Minecraft (PaperSpigot)",
+            "short_name": "minecraft_paperspigot",
+            "deploy_name": "Minecraft (PaperSpigot) on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "minecraft-paperspigot"
+        },
+        {
+            "id": 1116,
+            "name": "Minecraft (Bedrock)",
+            "short_name": "minecraft_bedrock",
+            "deploy_name": "Minecraft (Bedrock) on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "minecraft-bedrock"
+        },
+        {
+            "id": 1118,
+            "name": "Jamulus",
+            "short_name": "jamulus",
+            "deploy_name": "Jamulus on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "jamulus"
+        },
+        {
+            "id": 1122,
+            "name": "Ant Media Server Community Edition",
+            "short_name": "ant_media_server_community_edition",
+            "deploy_name": "Ant Media Server Community Edition on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "antmedia",
+            "image_id": "antmediaserver-community"
+        },
+        {
+            "id": 1123,
+            "name": "Asp.net",
+            "short_name": "aspnet",
+            "deploy_name": "Asp.net on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "apsnet"
+        },
+        {
+            "id": 1125,
+            "name": "Docker",
+            "short_name": "docker",
+            "deploy_name": "Docker on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "docker"
+        },
+        {
+            "id": 1128,
+            "name": "Jitsi",
+            "short_name": "jitsi",
+            "deploy_name": "Jitsi on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "jitsi"
+        },
+        {
+            "id": 1129,
+            "name": "NodeJS",
+            "short_name": "nodejs",
+            "deploy_name": "NodeJS on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "nodejs"
+        },
+        {
+            "id": 1130,
+            "name": "Pritunl",
+            "short_name": "pritunl",
+            "deploy_name": "Pritunl on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "pritunl"
+        },
+        {
+            "id": 1135,
+            "name": "Ant Media Server Enterprise Edition",
+            "short_name": "ant_media_server_enterprise_edition",
+            "deploy_name": "Ant Media Server Enterprise Edition on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "antmedia",
+            "image_id": "antmediaserver-enterprise"
+        },
+        {
+            "id": 1136,
+            "name": "Ubuntu Desktop (Gnome)",
+            "short_name": "ubuntu_desktop_gnome",
+            "deploy_name": "Ubuntu Desktop (Gnome) on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "ubuntu-gnome"
+        },
+        {
+            "id": 1137,
+            "name": "Ubuntu Desktop (KDE)",
+            "short_name": "ubuntu_desktop_kde",
+            "deploy_name": "Ubuntu Desktop (KDE) on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "ubuntu-kde"
+        },
+        {
+            "id": 1138,
+            "name": "Ubuntu Desktop (XFCE)",
+            "short_name": "ubuntu_desktop_xfce",
+            "deploy_name": "Ubuntu Desktop (XFCE) on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "ubuntu-xfce"
+        },
+        {
+            "id": 1139,
+            "name": "CloudHub",
+            "short_name": "cloudhub",
+            "deploy_name": "CloudHub on ZXG18",
+            "type": "marketplace",
+            "vendor": "cloudhub",
+            "image_id": "cloudhub"
+        },
+        {
+            "id": 1140,
+            "name": "Easypanel",
+            "short_name": "easypanel",
+            "deploy_name": "Easypanel on Ubuntu 22.04",
+            "type": "marketplace",
+            "vendor": "easypanel",
+            "image_id": "easypanel"
+        },
+        {
+            "id": 1142,
+            "name": "Keitaro",
+            "short_name": "keitaro",
+            "deploy_name": "Keitaro on CentOS 9 Stream x64",
+            "type": "marketplace",
+            "vendor": "Keitaro",
+            "image_id": "keitaro"
+        },
+        {
+            "id": 1148,
+            "name": "Steam",
+            "short_name": "steam",
+            "deploy_name": "Steam on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "steam"
+        },
+        {
+            "id": 1149,
+            "name": "Miniconda",
+            "short_name": "miniconda",
+            "deploy_name": "Miniconda on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "miniconda"
+        },
+        {
+            "id": 1153,
+            "name": "CloudPanel 2 - Ubuntu 24.04",
+            "short_name": "cloudpanel2-ubuntu",
+            "deploy_name": "CloudPanel 2 - Ubuntu 24.04 on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "cloudpanel",
+            "image_id": "cloudpanel2-ubuntu"
+        },
+        {
+            "id": 1154,
+            "name": "CloudPanel 2 - Debian 12",
+            "short_name": "cloudpanel2-debian",
+            "deploy_name": "CloudPanel 2 - Debian 12 on Debian 12",
+            "type": "marketplace",
+            "vendor": "cloudpanel",
+            "image_id": "cloudpanel2-debian"
+        },
+        {
+            "id": 1157,
+            "name": "Bitnami via Vultr - PrestaShop",
+            "short_name": "bitnami_via_vultr_prestashop",
+            "deploy_name": "Bitnami via Vultr - PrestaShop on Debian 11",
+            "type": "marketplace",
+            "vendor": "bitnami-via-vultr",
+            "image_id": "bitnami-jenkins-via-prestashop"
+        },
+        {
+            "id": 1158,
+            "name": "MLDev",
+            "short_name": "mldev",
+            "deploy_name": "MLDev on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "mldev"
+        },
+        {
+            "id": 1163,
+            "name": "BotGuard GateKeeper",
+            "short_name": "gatekeeper",
+            "deploy_name": "BotGuard GateKeeper on Debian 12",
+            "type": "marketplace",
+            "vendor": "botguard",
+            "image_id": "botguard"
+        },
+        {
+            "id": 1164,
+            "name": "VDev",
+            "short_name": "vdev",
+            "deploy_name": "VDev on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "vdev"
+        },
+        {
+            "id": 1167,
+            "name": "OpenLiteSpeed Joomla",
+            "short_name": "openlitespeed_joomla",
+            "deploy_name": "OpenLiteSpeed Joomla on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "LiteSpeed_Technologies",
+            "image_id": "openlitespeed-joomla"
+        },
+        {
+            "id": 1168,
+            "name": "OpenLiteSpeed Drupal",
+            "short_name": "openlitespeed_drupal",
+            "deploy_name": "OpenLiteSpeed Drupal on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "LiteSpeed_Technologies",
+            "image_id": "openlitespeed-drupal"
+        },
+        {
+            "id": 1169,
+            "name": "Vultr Broadcaster",
+            "short_name": "broadcaster",
+            "deploy_name": "Vultr Broadcaster on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "broadcaster"
+        },
+        {
+            "id": 1175,
+            "name": "Ispmanager",
+            "short_name": "ispmanager",
+            "deploy_name": "Ispmanager on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "Ispmanager",
+            "image_id": "ispmanager"
+        },
+        {
+            "id": 1178,
+            "name": "WordPress",
+            "short_name": "wordpress",
+            "deploy_name": "WordPress on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "wordpress"
+        },
+        {
+            "id": 1179,
+            "name": "WooCommerce",
+            "short_name": "woocommerce",
+            "deploy_name": "WooCommerce on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "woocommerce"
+        },
+        {
+            "id": 1181,
+            "name": "SeaTable",
+            "short_name": "seatable",
+            "deploy_name": "SeaTable on Debian 11",
+            "type": "marketplace",
+            "vendor": "SeaTable",
+            "image_id": "seatable"
+        },
+        {
+            "id": 1182,
+            "name": "Vodia Phone System",
+            "short_name": "vodia_phone_system",
+            "deploy_name": "Vodia Phone System on Alma Linux",
+            "type": "marketplace",
+            "vendor": "Vodia",
+            "image_id": "vodiaphonesystem"
+        },
+        {
+            "id": 1185,
+            "name": "3CX Phone System",
+            "short_name": "3cx_phone_system",
+            "deploy_name": "3CX Phone System on Debian 12",
+            "type": "marketplace",
+            "vendor": "3CXMARKETPLACE",
+            "image_id": "3cx"
+        },
+        {
+            "id": 1186,
+            "name": "InvokeAI",
+            "short_name": "invokeai",
+            "deploy_name": "InvokeAI on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "invokeai"
+        },
+        {
+            "id": 1187,
+            "name": "Video2x",
+            "short_name": "video2x",
+            "deploy_name": "Video2x on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "video2x"
+        },
+        {
+            "id": 1189,
+            "name": "Fauxpilot (16B)",
+            "short_name": "fauxpilot-large",
+            "deploy_name": "Fauxpilot (16B) on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "fauxpilot-large"
+        },
+        {
+            "id": 1191,
+            "name": "Fauxpilot (6B)",
+            "short_name": "fauxpilot-medium",
+            "deploy_name": "Fauxpilot (6B) on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "fauxpilot-medium"
+        },
+        {
+            "id": 1192,
+            "name": "Fauxpilot (2B)",
+            "short_name": "fauxpilot-small",
+            "deploy_name": "Fauxpilot (2B) on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "fauxpilot-small"
+        },
+        {
+            "id": 1193,
+            "name": "Fauxpilot (350M)",
+            "short_name": "fauxpilot-xsmall",
+            "deploy_name": "Fauxpilot (350M) on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "fauxpilot-xsmall"
+        },
+        {
+            "id": 1194,
+            "name": "Wireguard",
+            "short_name": "wireguard",
+            "deploy_name": "Wireguard on Ubuntu 22.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "wireguard"
+        },
+        {
+            "id": 1197,
+            "name": "LAMP",
+            "short_name": "lamp",
+            "deploy_name": "LAMP on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "lamp"
+        },
+        {
+            "id": 1198,
+            "name": "LEMP",
+            "short_name": "lemp",
+            "deploy_name": "LEMP on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "lemp"
+        },
+        {
+            "id": 1199,
+            "name": "Drupal",
+            "short_name": "drupal",
+            "deploy_name": "Drupal on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "drupal"
+        },
+        {
+            "id": 1201,
+            "name": "Webmin",
+            "short_name": "webmin",
+            "deploy_name": "Webmin on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "webmin"
+        },
+        {
+            "id": 1202,
+            "name": "Nextcloud",
+            "short_name": "nextcloud",
+            "deploy_name": "Nextcloud on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "nextcloud"
+        },
+        {
+            "id": 1203,
+            "name": "Joomla",
+            "short_name": "joomla",
+            "deploy_name": "Joomla on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "joomla"
+        },
+        {
+            "id": 1204,
+            "name": "Vultr WebApp",
+            "short_name": "vultr_webapp",
+            "deploy_name": "Vultr WebApp on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "webapp"
+        },
+        {
+            "id": 1206,
+            "name": "MediaWiki",
+            "short_name": "mediawiki",
+            "deploy_name": "MediaWiki on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "mediawiki"
+        },
+        {
+            "id": 1207,
+            "name": "PrestaShop",
+            "short_name": "prestashop",
+            "deploy_name": "PrestaShop on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "prestashop"
+        },
+        {
+            "id": 1216,
+            "name": "Bitnami via Vultr - Minio",
+            "short_name": "bitnami_via_vultr_minio",
+            "deploy_name": "Bitnami via Vultr - Minio on Debian 11",
+            "type": "marketplace",
+            "vendor": "bitnami-via-vultr",
+            "image_id": "bitnami-minio-via-vultr"
+        },
+        {
+            "id": 1219,
+            "name": "Colyseus",
+            "short_name": "colyseus",
+            "deploy_name": "Colyseus on Ubuntu",
+            "type": "marketplace",
+            "vendor": "colyseus",
+            "image_id": "colyseus"
+        },
+        {
+            "id": 1220,
+            "name": "Yeastar P-Series Phone System",
+            "short_name": "yeastar_p-series_phone_system",
+            "deploy_name": "Yeastar P-Series Phone System on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "Yeastar",
+            "image_id": "ddd"
+        },
+        {
+            "id": 1222,
+            "name": "Haltdos WAF Pro",
+            "short_name": "haltdos_waf_pro",
+            "deploy_name": "Haltdos WAF Pro on Ubuntu 22.04",
+            "type": "marketplace",
+            "vendor": "Haltdos",
+            "image_id": "haltdos-professional-waf"
+        },
+        {
+            "id": 1226,
+            "name": "Haltdos WAF Community Edition",
+            "short_name": "haltdos_waf_community",
+            "deploy_name": "Haltdos WAF Community Edition on Ubuntu 22.04",
+            "type": "marketplace",
+            "vendor": "Haltdos",
+            "image_id": "haltdos-community-waf"
+        },
+        {
+            "id": 1230,
+            "name": "Bun",
+            "short_name": "bun",
+            "deploy_name": "Bun on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "bun"
+        },
+        {
+            "id": 1243,
+            "name": "ComfyUI",
+            "short_name": "comfyui",
+            "deploy_name": "ComfyUI on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "comfyui"
+        },
+        {
+            "id": 1246,
+            "name": "BrowserBox",
+            "short_name": "browserbox",
+            "deploy_name": "BrowserBox on Ubuntu 24.04 LTS x64",
+            "type": "marketplace",
+            "vendor": "DOSAYGO",
+            "image_id": "browserbox"
+        },
+        {
+            "id": 1249,
+            "name": "Palworld",
+            "short_name": "palworld",
+            "deploy_name": "Palworld on Ubuntu 22.04",
+            "type": "marketplace",
+            "vendor": "Gameservers",
+            "image_id": "palworld-game"
+        },
+        {
+            "id": 1255,
+            "name": "k3s",
+            "short_name": "k3s",
+            "deploy_name": "k3s on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "k3s"
+        },
+        {
+            "id": 1257,
+            "name": "MongoDB\u00ae Community Edition",
+            "short_name": "mongodb",
+            "deploy_name": "MongoDB\u00ae Community Edition on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "mongodb"
+        },
+        {
+            "id": 1261,
+            "name": "LibreChat",
+            "short_name": "librechat",
+            "deploy_name": "LibreChat on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "librechat"
+        },
+        {
+            "id": 1263,
+            "name": "Laravel",
+            "short_name": "laravel",
+            "deploy_name": "Laravel on Ubuntu 24.04 LTS x64",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "laravel"
+        },
+        {
+            "id": 1264,
+            "name": "Elasticsearch",
+            "short_name": "elasticsearch",
+            "deploy_name": "Elasticsearch on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "elasticsearch"
+        },
+        {
+            "id": 1265,
+            "name": "Coolify",
+            "short_name": "coolify",
+            "deploy_name": "Coolify on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "coolify"
+        },
+        {
+            "id": 1266,
+            "name": "Supabase",
+            "short_name": "supabase",
+            "deploy_name": "Supabase on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "supabase"
+        },
+        {
+            "id": 1267,
+            "name": "Strapi",
+            "short_name": "strapi",
+            "deploy_name": "Strapi on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "strapi"
+        },
+        {
+            "id": 1268,
+            "name": "Grafana",
+            "short_name": "grafana",
+            "deploy_name": "Grafana on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "grafana"
+        },
+        {
+            "id": 1269,
+            "name": "Prometheus",
+            "short_name": "prometheus",
+            "deploy_name": "Prometheus on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "prometheus"
+        },
+        {
+            "id": 1270,
+            "name": "Uptime Kuma",
+            "short_name": "uptime_kuma",
+            "deploy_name": "Uptime Kuma on Ubuntu 24.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "uptimekuma"
+        },
+        {
+            "id": 1272,
+            "name": "Statusnook",
+            "short_name": "statusnook",
+            "deploy_name": "Statusnook on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "goksan",
+            "image_id": "statusnook"
+        },
+        {
+            "id": 1279,
+            "name": "PasswordLab - Password Manager",
+            "short_name": "passwordlab",
+            "deploy_name": "PasswordLab - Password Manager on Ubuntu 24.04 LTS x64",
+            "type": "marketplace",
+            "vendor": "passwordlab",
+            "image_id": "passwordlab"
+        },
+        {
+            "id": 1280,
+            "name": "Forgejo",
+            "short_name": "forgejo",
+            "deploy_name": "Forgejo on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "forgejo"
+        },
+        {
+            "id": 1282,
+            "name": "Ubuntu 24.04 LTS with Updates",
+            "short_name": "linuxpatch_ubuntu2404",
+            "deploy_name": "Ubuntu 24.04 LTS with Updates on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "linuxpatch",
+            "image_id": "ubuntupatching"
+        },
+        {
+            "id": 1283,
+            "name": "Debian 12 with Automatic Updates",
+            "short_name": "linuxpatch_debian12",
+            "deploy_name": "Debian 12 with Automatic Updates on Debian 12",
+            "type": "marketplace",
+            "vendor": "linuxpatch",
+            "image_id": "debianpatching"
+        },
+        {
+            "id": 1285,
+            "name": "Clever VPN  Clustered Server",
+            "short_name": "clever_vpn_server",
+            "deploy_name": "Clever VPN  Clustered Server on Debian 12",
+            "type": "marketplace",
+            "vendor": "clever-vpn",
+            "image_id": "clever-vpn"
+        },
+        {
+            "id": 1294,
+            "name": "LinuxPatch Appliance",
+            "short_name": "linuxpatch",
+            "deploy_name": "LinuxPatch Appliance on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "linuxpatch",
+            "image_id": "linuxpatch-appliance"
+        },
+        {
+            "id": 1298,
+            "name": "ONLYOFFICE DocSpace",
+            "short_name": "onlyoffice_docspace",
+            "deploy_name": "ONLYOFFICE DocSpace on Ubuntu 24.04 LTS",
+            "type": "marketplace",
+            "vendor": "Ascensio_System",
+            "image_id": "onlyoffice-docspace"
+        },
+        {
+            "id": 1301,
+            "name": "MooseFS",
+            "short_name": "moosefs",
+            "deploy_name": "MooseFS on Ubuntu 22.04",
+            "type": "marketplace",
+            "vendor": "vultr-labs",
+            "image_id": "moosefs"
+        }
+    ],
+    "meta": {
+        "total": 112,
+        "links": {
+            "next": "bmV4dF9fMTMwMQ==",
+            "prev": ""
+        }
+    }
+}

@@ -41,6 +41,30 @@ interface Droplet {
   updatedAt: string
 }
 
+interface VultrInstance {
+  id: string
+  label?: string
+  hostname?: string
+  plan: string
+  region: string
+  status: string
+  power_status: string
+  server_status: string
+  main_ip?: string
+  vcpu_count?: number
+  ram?: number
+  disk?: number
+  disk_count?: number
+  bandwidth?: number
+  monthly_cost?: number
+  hourly_cost?: number
+  date_created?: string
+  os?: string
+  os_id?: number
+  app_id?: number
+  image_id?: string
+}
+
 export default function Dashboard() {
   const { isSignedIn, isLoaded, dbUser, loading: userLoading } = useUser()
   const { deleteDroplet, isDeleting, error: deleteError, clearError } = useDropletDeletion()
@@ -59,6 +83,10 @@ export default function Dashboard() {
   const [liveDroplets, setLiveDroplets] = useState<any[]>([])
   const [loadingLiveDroplets, setLoadingLiveDroplets] = useState(false)
   const [liveDropletsError, setLiveDropletsError] = useState<string | null>(null)
+  const [vultrInstances, setVultrInstances] = useState<VultrInstance[]>([])
+  const [loadingVultrInstances, setLoadingVultrInstances] = useState(false)
+  const [vultrInstancesError, setVultrInstancesError] = useState<string | null>(null)
+  const [deletingVultrInstanceId, setDeletingVultrInstanceId] = useState<string | null>(null)
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -68,6 +96,7 @@ export default function Dashboard() {
     
     if (isLoaded && isSignedIn && dbUser) {
       fetchDroplets()
+      fetchVultrInstances()
     }
   }, [isLoaded, isSignedIn, dbUser, router])
 
@@ -178,6 +207,50 @@ export default function Dashboard() {
     }
   }
 
+  const fetchVultrInstances = async () => {
+    try {
+      setLoadingVultrInstances(true)
+      setVultrInstancesError(null)
+      const response = await fetch('/api/vultr/instances')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch Vultr instances')
+      }
+      const data = await response.json()
+      setVultrInstances(data.instances || [])
+    } catch (err) {
+      setVultrInstancesError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoadingVultrInstances(false)
+    }
+  }
+
+  const handleDeleteVultrInstance = async (instanceId: string, instanceLabel?: string) => {
+    if (!confirm(`Are you sure you want to delete "${instanceLabel || instanceId}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      setDeletingVultrInstanceId(instanceId)
+      const response = await fetch(`/api/vultr/instances/${instanceId}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete instance')
+      }
+      
+      // Remove the deleted instance from the local state
+      setVultrInstances(prev => prev.filter(inst => inst.id !== instanceId))
+    } catch (err) {
+      console.error('Failed to delete Vultr instance:', err)
+      alert(err instanceof Error ? err.message : 'Failed to delete instance')
+    } finally {
+      setDeletingVultrInstanceId(null)
+    }
+  }
+
   const getTimeRemaining = (expirationTime?: string, isDeleted?: boolean) => {
     if (isDeleted) return 'Expired'
     if (!expirationTime) return null
@@ -282,7 +355,7 @@ export default function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold text-foreground">GPU Droplets Dashboard</h1>
             <p className="text-muted-foreground mt-2">
-              Manage your DigitalOcean droplets created through AI
+              Manage your DigitalOcean droplets and Vultr instances created through AI
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -295,7 +368,10 @@ export default function Dashboard() {
               {loadingLiveDroplets ? 'Loading...' : 'List Live Droplets'}
             </button>
             <button
-              onClick={fetchDroplets}
+              onClick={() => {
+                fetchDroplets()
+                fetchVultrInstances()
+              }}
               className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90"
             >
               <RefreshCw className="w-4 h-4" />
@@ -304,16 +380,17 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {(error || deleteError || analyticsError) && (
+        {(error || deleteError || analyticsError || vultrInstancesError) && (
           <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg">
             <div className="whitespace-pre-line">
-              {error || deleteError || analyticsError}
+              {error || deleteError || analyticsError || vultrInstancesError}
             </div>
-            {(deleteError || analyticsError) && (
+            {(deleteError || analyticsError || vultrInstancesError) && (
               <button
                 onClick={() => {
                   if (deleteError) clearError()
                   if (analyticsError) clearAnalyticsError()
+                  if (vultrInstancesError) setVultrInstancesError(null)
                 }}
                 className="mt-2 text-red-600 hover:text-red-800 underline"
               >
@@ -476,6 +553,144 @@ export default function Dashboard() {
             })}
           </div>
         )}
+
+        {/* Vultr Instances Section */}
+        <div className="mt-12 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">Vultr Instances</h2>
+              <p className="text-muted-foreground mt-1">
+                Manage your Vultr instances deployed from the marketplace
+              </p>
+            </div>
+            {loadingVultrInstances && (
+              <RefreshCw className="w-5 h-5 animate-spin text-muted-foreground" />
+            )}
+          </div>
+
+          {vultrInstances.length === 0 && !loadingVultrInstances ? (
+            <div className="text-center py-12 bg-card border border-border rounded-lg">
+              <Server className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">No Vultr instances found</h3>
+              <p className="text-muted-foreground mb-4">
+                Deploy instances from the marketplace
+              </p>
+              <button
+                onClick={() => router.push('/marketplace')}
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90"
+              >
+                Browse Marketplace
+              </button>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {vultrInstances.map((instance) => (
+                <div
+                  key={instance.id}
+                  className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Server className="w-5 h-5 text-primary" />
+                      <h3 className="font-semibold text-foreground">
+                        {instance.label || instance.hostname || `Instance ${instance.id.slice(0, 8)}`}
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(instance.status)}`}
+                      >
+                        {instance.status}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteVultrInstance(instance.id, instance.label)}
+                        disabled={deletingVultrInstanceId === instance.id}
+                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Delete instance"
+                      >
+                        {deletingVultrInstanceId === instance.id ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4" />
+                      <span>{instance.region}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Cpu className="w-4 h-4" />
+                      <span>
+                        {instance.vcpu_count ? `${instance.vcpu_count} vCPU` : 'N/A'}
+                        {instance.ram && `, ${instance.ram}MB RAM`}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <HardDrive className="w-4 h-4" />
+                      <span>
+                        {instance.disk ? `${instance.disk}GB` : 'N/A'}
+                        {instance.disk_count && instance.disk_count > 1 ? ` × ${instance.disk_count}` : ''}
+                      </span>
+                    </div>
+
+                    {instance.main_ip && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <ExternalLink className="w-4 h-4" />
+                        <span className="font-mono">{instance.main_ip}</span>
+                      </div>
+                    )}
+
+                    {instance.plan && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Plan:</span>
+                        <span className="font-mono text-xs">{instance.plan}</span>
+                      </div>
+                    )}
+
+                    {(instance.monthly_cost || instance.hourly_cost) && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <DollarSign className="w-4 h-4" />
+                        <span>
+                          {instance.monthly_cost ? `$${instance.monthly_cost}/mo` : ''}
+                          {instance.monthly_cost && instance.hourly_cost ? ' • ' : ''}
+                          {instance.hourly_cost ? `$${instance.hourly_cost}/hr` : ''}
+                        </span>
+                      </div>
+                    )}
+
+                    {instance.date_created && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="w-4 h-4" />
+                        <span>{new Date(instance.date_created).toLocaleDateString()}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
+                      <span>Power:</span>
+                      <span className={`px-2 py-0.5 rounded ${
+                        instance.power_status === 'running' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {instance.power_status || 'unknown'}
+                      </span>
+                      <span className="ml-2">Server:</span>
+                      <span className={`px-2 py-0.5 rounded ${
+                        instance.server_status === 'ok' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {instance.server_status || 'unknown'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* GPU Analytics Modal */}

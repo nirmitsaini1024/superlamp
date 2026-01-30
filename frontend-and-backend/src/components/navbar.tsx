@@ -6,7 +6,7 @@ import ThemeToggleButton from "@/components/ui/theme-toggle-button";
 import { ClientOnly } from "@/components/ui/client-only";
 import Link from "next/link";
 import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs';
-import { Server } from 'lucide-react';
+import { Server, Store } from 'lucide-react';
 
 function DashboardLink() {
   const { isSignedIn } = useUser();
@@ -20,6 +20,17 @@ function DashboardLink() {
       <Button variant="ghost" size="sm" className="flex items-center gap-2">
         <Server className="w-4 h-4" />
         Dashboard
+      </Button>
+    </Link>
+  );
+}
+
+function MarketplaceLink() {
+  return (
+    <Link href="/marketplace">
+      <Button variant="ghost" size="sm" className="flex items-center gap-2">
+        <Store className="w-4 h-4" />
+        Market Place
       </Button>
     </Link>
   );
@@ -67,6 +78,11 @@ export default function Navbar() {
             fallback={<div className="w-8 h-8 bg-sidebar-accent rounded-full animate-pulse" />}
           >
             <DashboardLink />
+          </ClientOnly>
+          <ClientOnly
+            fallback={null}
+          >
+            <MarketplaceLink />
           </ClientOnly>
           <ThemeToggleButton
             variant="gif"
