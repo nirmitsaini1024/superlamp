@@ -6,8 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "npx prisma generate && next build",
     "start": "next start",
-    "lint": "next lint",
-    "cron": "node scripts/run-cron.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.32.0",
