@@ -4,7 +4,7 @@ const VULTR_API_BASE = "https://api.vultr.com/v2";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const apiKey = process.env.VULTR_API_KEY?.trim();
@@ -18,7 +18,7 @@ export async function DELETE(
       );
     }
 
-    const instanceId = params.id;
+    const { id: instanceId } = await params;
     if (!instanceId) {
       return NextResponse.json(
         { error: "Instance ID is required" },
