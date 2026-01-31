@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth()
@@ -13,7 +13,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const dropletId = parseInt(params.id)
+    const { id } = await params
+    const dropletId = parseInt(id)
     if (isNaN(dropletId)) {
       return NextResponse.json(
         { error: 'Invalid droplet ID' },
