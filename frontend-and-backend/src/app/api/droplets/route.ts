@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
             ipAddress,
             projectName,
             userInput,
+            envType,
             costPerHour,
             durationMinutes
         } = body
@@ -160,6 +161,7 @@ export async function POST(request: NextRequest) {
                 ipAddress,
                 projectName,
                 userInput,
+                envType: envType ?? null,
                 costPerHour,
                 expirationTime
             }

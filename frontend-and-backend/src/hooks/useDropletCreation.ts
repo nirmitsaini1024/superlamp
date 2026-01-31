@@ -67,6 +67,9 @@ export function useDropletCreation(): UseDropletCreationReturn {
               ipAddress: null,
               projectName: projectName,
               userInput: userInput,
+              envType: Array.isArray(response.analysis?.extracted_env_types) && response.analysis.extracted_env_types.length > 0
+                ? response.analysis.extracted_env_types.join(',')
+                : (response.analysis?.extracted_env_type ?? null),
               costPerHour: null,
               durationMinutes: response.duration_minutes || 30
             })

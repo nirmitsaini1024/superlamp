@@ -23,6 +23,7 @@ model Droplet {
   ipAddress     String?  @map("ip_address")
   projectName   String?  @map("project_name")
   userInput     String   @map("user_input")
+  envType       String?  @map("env_type")
   costPerHour   Float?   @map("cost_per_hour")
   expirationTime DateTime? @map("expiration_time")
   isDeleted     Boolean  @default(false) @map("is_deleted")

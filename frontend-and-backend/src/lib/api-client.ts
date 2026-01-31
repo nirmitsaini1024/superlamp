@@ -23,6 +23,9 @@ export interface DropletCreationResponse {
     extracted_region: string | null;
     extracted_size: string | null;
     extracted_image: string | null;
+    extracted_env_type?: string | null;
+    extracted_env_types?: string[] | null;
+    extracted_duration_minutes?: number | null;
     confidence_score: number;
     missing_parameters: string[];
     suggestions: string[];
